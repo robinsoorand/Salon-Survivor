@@ -510,9 +510,8 @@
             
             if (type === 'crystal') {
                 e.hp = 30; e.maxHp = 30; e.speed = 0; e.radius = 20; e.color = '#f0f'; e.xpValue = 0;
-                e.update = function(dt) { this.animationPhase += dt * 2; };
-                e.draw = function(ctx, camX, camY) {
-}
+                e.update = function(dt) {
+                    this.animationPhase += dt * 2;
                     if (this.hp <= this.maxHp / 2 && !this.splitTriggered) {
                         this.splitTriggered = true;
                         this.hp = 0; // Trigger death split in damageEnemy
@@ -1430,6 +1429,7 @@
         }
 
         // Meta progression overrides
+        const oldShowGameOver = showGameOver;
         showGameOver = function(victory) {
             oldShowGameOver(victory);
             
@@ -1442,6 +1442,7 @@
             loadProgression();
         }
 
+        const oldReturnToMenu = returnToMenu;
         returnToMenu = function() {
             oldReturnToMenu();
             isPaused = true;
