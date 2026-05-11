@@ -1,0 +1,26 @@
+-- 1. Add yourself as a student into the database.
+INSERT INTO students (eid, fname, lname) VALUES ('50607120296', 'Robin', 'Soorand');
+
+-- 2. Add a subject that you have completed into the database.
+INSERT INTO subjects (name_en, name_et, code, credits, assesment_type) VALUES ('C Programming', 'C Programmeerimine', 'ITC0001', 6, 'Exam');
+
+-- 3. Add a declaration to yourself for the subject that you just created.
+INSERT INTO declarations (student_id, subject_id, grade) VALUES (
+    (SELECT id FROM students WHERE eid = '50607120296'),
+    (SELECT id FROM subjects WHERE code = 'ITC0001'),
+    5
+);
+
+-- 4. Add a declaration to yourself for an existing subject.
+INSERT INTO declarations (student_id, subject_id, grade) VALUES (
+    (SELECT id FROM students WHERE eid = '50607120296'),
+    (SELECT id FROM subjects WHERE id = 1), -- Programming 1
+    4
+);
+
+-- 5. Add another declaration to yourself for an existing subject.
+INSERT INTO declarations (student_id, subject_id, grade) VALUES (
+    (SELECT id FROM students WHERE eid = '50607120296'),
+    (SELECT id FROM subjects WHERE id = 2), -- Discrete mathematics
+    3
+);
