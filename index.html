@@ -372,17 +372,18 @@
             speed: 200, radius: 15, angle: 0,
             color: '#0ff', hp: 100, maxHp: 100,
             level: 1, xp: 0, xpToNext: 10,
-            dashCooldown: 0, dashDuration: 0, isInvulnerable: false,
+            dashCooldown: 0, dashDuration: 0, isInvulnerable: false, invulnTimer: 0,
             
             update: function(dt) {
                 if (this.dashCooldown > 0) this.dashCooldown -= dt;
+                if (this.invulnTimer > 0) this.invulnTimer -= dt;
                 if (this.dashDuration > 0) {
                     this.dashDuration -= dt;
                     this.isInvulnerable = true;
                     this.x += this.vx * this.speed * 4 * dt;
                     this.y += this.vy * this.speed * 4 * dt;
                 } else {
-                    this.isInvulnerable = false;
+                    this.isInvulnerable = this.invulnTimer > 0;
                     if (input.isDashing && this.dashCooldown <= 0) {
                         let dx = input.x, dy = input.y;
                         if (dx === 0 && dy === 0) {
@@ -398,10 +399,10 @@
                         input.isDashing = false; // consume if on cd
                         this.vx = input.x; this.vy = input.y;
                         if (this.vx !== 0 || this.vy !== 0) {
-                            // 8 directional angle rounding
+                            // 16 directional angle rounding
                             let rawAngle = Math.atan2(this.vy, this.vx);
-                            const PI8 = Math.PI / 8;
-                            this.angle = Math.round(rawAngle / (Math.PI / 4)) * (Math.PI / 4);
+                            const PI16 = Math.PI / 8;
+                            this.angle = Math.round(rawAngle / PI16) * PI16;
                         }
                         this.x += this.vx * this.speed * dt;
                         this.y += this.vy * this.speed * dt;
@@ -510,8 +511,8 @@
             
             if (type === 'crystal') {
                 e.hp = 30; e.maxHp = 30; e.speed = 0; e.radius = 20; e.color = '#f0f'; e.xpValue = 0;
-                e.update = function(dt) { 
-                    this.animationPhase += dt * 2; 
+                e.update = function(dt) {
+                    this.animationPhase += dt * 2;
                     if (this.hp <= this.maxHp / 2 && !this.splitTriggered) {
                         this.splitTriggered = true;
                         this.hp = 0; // Trigger death split in damageEnemy
@@ -601,7 +602,9 @@
                     let pDist = Math.hypot(pdx, pdy);
                     // Add a tiny bit of leniency to collision radius
                     if (pDist < (player.radius + e1.radius) * 0.8) {
-                        player.hp -= e1.damage * dt; // Continuous damage while touching
+                        player.hp -= e1.damage;
+                        player.invulnTimer = 0.5;
+                        player.isInvulnerable = true;
                         updateHUD();
                         if (player.hp <= 0) {
                             player.hp = 0;
@@ -612,7 +615,7 @@
                         
                         // Deadly Aura recoil damage
                         if (hasBuff('Deadly Aura')) {
-                            damageEnemy(e1, 50 * dt);
+                            damageEnemy(e1, 50); // Make recoil damage also direct instead of per-frame if hit
                         }
                     }
                 }
@@ -788,6 +791,10 @@
                 stats.coins += d.value;
                 updateHUD();
             }
+        }
+
+        function hasBuff(name) {
+            return activeBuffs.some(b => b.name === name);
         }
 
         function applyBuff(b) {
@@ -1092,13 +1099,11 @@
             });
 
             if (weapons.hairspray.active) {
-                const ratio = weapons.hairspray.timer / weapons.hairspray.cooldown;
-                if (ratio > 0.8) {
-                    ctx.beginPath();
-                    ctx.arc(player.x - camX, player.y - camY, weapons.hairspray.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(0, 255, 255, ${(ratio - 0.8)*2})`;
-                    ctx.fill();
-                }
+                const pulse = 0.2 + Math.abs(Math.sin(performance.now() / 500)) * 0.3;
+                ctx.beginPath();
+                ctx.arc(player.x - camX, player.y - camY, weapons.hairspray.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 255, 255, ${pulse})`;
+                ctx.fill();
             }
 
             if (weapons.dryer.active) {
