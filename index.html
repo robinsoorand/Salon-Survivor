@@ -398,10 +398,10 @@
                         input.isDashing = false; // consume if on cd
                         this.vx = input.x; this.vy = input.y;
                         if (this.vx !== 0 || this.vy !== 0) {
-                            // 8 directional angle rounding
+                            // 16 directional angle rounding
                             let rawAngle = Math.atan2(this.vy, this.vx);
-                            const PI8 = Math.PI / 8;
-                            this.angle = Math.round(rawAngle / (Math.PI / 4)) * (Math.PI / 4);
+                            const PI16 = Math.PI / 8;
+                            this.angle = Math.round(rawAngle / PI16) * PI16;
                         }
                         this.x += this.vx * this.speed * dt;
                         this.y += this.vy * this.speed * dt;
@@ -1092,13 +1092,11 @@
             });
 
             if (weapons.hairspray.active) {
-                const ratio = weapons.hairspray.timer / weapons.hairspray.cooldown;
-                if (ratio > 0.8) {
-                    ctx.beginPath();
-                    ctx.arc(player.x - camX, player.y - camY, weapons.hairspray.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(0, 255, 255, ${(ratio - 0.8)*2})`;
-                    ctx.fill();
-                }
+                const pulse = 0.2 + Math.abs(Math.sin(performance.now() / 500)) * 0.3;
+                ctx.beginPath();
+                ctx.arc(player.x - camX, player.y - camY, weapons.hairspray.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 255, 255, ${pulse})`;
+                ctx.fill();
             }
 
             if (weapons.dryer.active) {
